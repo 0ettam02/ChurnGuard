@@ -21,8 +21,8 @@ from fastapi import UploadFile, File
 import shutil
 import os
 
-model_churn = joblib.load("python/modello_churn.pkl")
-model_mese_abbandono = joblib.load("python/modello_ultima_presenza.pkl")
+model_churn = joblib.load("server/modello_churn.pkl")
+model_mese_abbandono = joblib.load("server/modello_ultima_presenza.pkl")
 
 df_encoded = None
 df_noChurn = None
