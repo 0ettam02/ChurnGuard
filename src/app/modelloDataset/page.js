@@ -12,6 +12,9 @@ export default function SceltaFunzionalita() {
     setIsClient(true);
   }, []);
 
+  // Prendo URL backend da variabile d'ambiente
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   async function handleFileUpload() {
     if (!file) {
       setUploadStatus("Nessun file selezionato.");
@@ -22,7 +25,7 @@ export default function SceltaFunzionalita() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:8000/modello_dataset", {
+      const res = await fetch(`${backendUrl}/modello_dataset`, {
         method: "POST",
         body: formData,
       });

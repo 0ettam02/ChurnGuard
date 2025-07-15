@@ -23,8 +23,11 @@ export default function Modello() {
     const [meseAbbandono, setMeseAbbandono] = useState(null);
     const [risultato, setRisultato] = useState(null);
 
+    // Usa la variabile d'ambiente per l'URL backend
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
     async function handleClick() {
-        const res = await fetch("http://localhost:8000/predict", {
+        const res = await fetch(`${backendUrl}/predict`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

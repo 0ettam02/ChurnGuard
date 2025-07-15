@@ -11,14 +11,15 @@ export default function InfoSoldi({
     meseIscrizione,
     tipoAbbonamento,
     sessoF,
-    sessoM })
-    {
-
+    sessoM
+}) {
     const [data, setData] = useState(null);
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
     useEffect(() => {
         const fetchInfoSoldi = async () => {
           try {
-            const res = await fetch("http://localhost:8000/info_soldi", {
+            const res = await fetch(`${backendUrl}/info_soldi`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -46,44 +47,40 @@ export default function InfoSoldi({
         };
       
         fetchInfoSoldi();
-      }, [
+    }, [
         eta, prezzoAbbonamento, mediaPresenze,
         giorniUltimaPresenza, annoIscrizione,
         meseIscrizione, tipoAbbonamento,
-        sessoF, sessoM
-      ]);
-      
+        sessoF, sessoM, backendUrl
+    ]);
 
-        useEffect(() => {
-          AOS.init();
-        }, []);
+    useEffect(() => {
+      AOS.init();
+    }, []);
 
-          useEffect(() => {
-            if (data) {
-              AOS.refresh();
-            }
-          }, [data]);
+    useEffect(() => {
+      if (data) {
+        AOS.refresh();
+      }
+    }, [data]);
 
-    return(
-        <>
+    return (
         <div>
-        {data ? (
-            <>
-                {console.log("Dati info_soldi ricevuti:", data)}
-                <div
-                    data-aos="fade-right"
-                    data-aos-offset="200"
-                    data-aos-easing="ease-in-sine"
-                    className="min-w-60 bg-red-500/10 border border-red-400 text-red-200 rounded-lg p-6 text-lg mb-40 mt-10"
-                >
-                    <p>{data.messaggio}</p>
-                </div>
-            </>
-        ) : (
-            <p>Caricamento dati...</p>
-        )}
-
+          {data ? (
+              <>
+                  {console.log("Dati info_soldi ricevuti:", data)}
+                  <div
+                      data-aos="fade-right"
+                      data-aos-offset="200"
+                      data-aos-easing="ease-in-sine"
+                      className="min-w-60 bg-red-500/10 border border-red-400 text-red-200 rounded-lg p-6 text-lg mb-40 mt-10"
+                  >
+                      <p>{data.messaggio}</p>
+                  </div>
+              </>
+          ) : (
+              <p>Caricamento dati...</p>
+          )}
         </div>
-        </>
-    )
+    );
 }

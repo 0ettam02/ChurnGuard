@@ -5,9 +5,10 @@ import 'aos/dist/aos.css';
 
 export default function IstogrammaFrequenzaAbbandoni() {
   const [data, setData] = useState([]);
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
-    fetch("http://localhost:8000/istogramma_distribuzione_frequenza_abbandoni")
+    fetch(`${backendUrl}/istogramma_distribuzione_frequenza_abbandoni`)
       .then(res => res.json())
       .then(json => {
         console.log(json);
@@ -15,7 +16,7 @@ export default function IstogrammaFrequenzaAbbandoni() {
       });
 
     AOS.init({});
-  }, []); 
+  }, [backendUrl]); 
 
   return (
     <div data-aos="fade-right" data-aos-offset="200" data-aos-easing="ease-in-sine" className='mt-10'>
@@ -23,10 +24,10 @@ export default function IstogrammaFrequenzaAbbandoni() {
             <h2 className="text-xl font-bold mb-4">Distribuzione Frequenza Degli Abbandoni</h2>
             <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={data}>
-                <XAxis dataKey="eta" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="frequenza" fill="purple" />
+                  <XAxis dataKey="eta" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="frequenza" fill="purple" />
                 </BarChart>
             </ResponsiveContainer>
         </div>

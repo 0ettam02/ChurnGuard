@@ -7,9 +7,12 @@ import 'aos/dist/aos.css';
 
 export default function GraficoAbbandoniPerAbbonamento() {
   const [data, setData] = useState([]);
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
+
 
   useEffect(() => {
-    fetch("http://localhost:8000/grafico_abbandoni_per_abbonamento")
+    fetch(`${backendUrl}/grafico_abbandoni_per_abbonamento`)
       .then(res => res.json())
       .then(json => {
         console.log(json);
@@ -17,7 +20,7 @@ export default function GraficoAbbandoniPerAbbonamento() {
       });
 
     AOS.init({});
-  }, []); 
+  }, [backendUrl]); 
 
   return (
     <>

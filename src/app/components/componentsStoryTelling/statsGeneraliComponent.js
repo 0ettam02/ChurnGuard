@@ -18,10 +18,12 @@ export default function StatsGenerali({
   const [dataMensili, setDataMensili] = useState(null);
   const [dataSett, setDataSett] = useState(null);
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   useEffect(() => {
     const fetchChurnInfo = async () => {
       try {
-        const res = await fetch("http://localhost:8000/churn_info");
+        const res = await fetch(`${backendUrl}/churn_info`);
         const json = await res.json();
         setData(json);
       } catch (err) {
@@ -29,13 +31,13 @@ export default function StatsGenerali({
       }
     };
     fetchChurnInfo();
-  }, []);
+  }, [backendUrl]);
 
 
   useEffect(() => {
     const fetchChurnInfoMensili = async () => {
       try {
-        const res = await fetch("http://localhost:8000/churn_info_mensili", {
+        const res = await fetch(`${backendUrl}/churn_info_mensili`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -73,14 +75,14 @@ export default function StatsGenerali({
     eta, prezzoAbbonamento, mediaPresenze,
     giorniUltimaPresenza, annoIscrizione,
     meseIscrizione, tipoAbbonamento,
-    sessoF, sessoM
+    sessoF, sessoM, backendUrl
   ]);
 
 
   useEffect(() => {
     const fetchChurnPresenzSett = async () => {
       try {
-        const res = await fetch("http://localhost:8000/churn_presenzaSett");
+        const res = await fetch(`${backendUrl}/churn_presenzaSett`);
         const json = await res.json();
         setDataSett(json);
       } catch (err) {
@@ -88,7 +90,7 @@ export default function StatsGenerali({
       }
     };
     fetchChurnPresenzSett();
-  }, []);
+  }, [backendUrl]);
   
 
   useEffect(() => {

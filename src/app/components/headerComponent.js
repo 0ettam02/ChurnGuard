@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import { BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function Header() {
@@ -8,10 +8,12 @@ export default function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await fetch("http://localhost:8000/utenti_rischio");
+        const res = await fetch(`${backendUrl}/utenti_rischio`);
         if (!res.ok) throw new Error("Errore nel recupero notifiche");
         const data = await res.json();
         setNotifications(data);
@@ -21,7 +23,7 @@ export default function Header() {
     };
 
     fetchNotifications();
-  }, []);
+  }, [backendUrl]);
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
@@ -79,11 +81,11 @@ export default function Header() {
                       key={notif.id}
                       className="px-4 py-2 flex justify-between items-center hover:bg-gray-100 border-b last:border-none"
                     >
-                    <Link href={`/gestioneUtenti?customer_id=${notif.customer_id}`}>
-                      <span className="text-sm cursor-pointer hover:underline">
-                        {notif.message}
-                      </span>
-                    </Link>
+                      <Link href={`/gestioneUtenti?customer_id=${notif.customer_id}`}>
+                        <span className="text-sm cursor-pointer hover:underline">
+                          {notif.message}
+                        </span>
+                      </Link>
 
                       <button
                         onClick={() => removeNotification(notif.id)}

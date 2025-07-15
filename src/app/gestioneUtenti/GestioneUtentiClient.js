@@ -11,13 +11,15 @@ export default function GestioneUtentiClient() {
   const [message, setMessage] = useState({});
   const [loading, setLoading] = useState(true);
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   useEffect(() => {
     if (!customer_id) return;
 
     const fetchRetention = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:8000/retention/?customer_id=${customer_id}`);
+        const res = await fetch(`${backendUrl}/retention/?customer_id=${customer_id}`);
         if (!res.ok) throw new Error("Errore nel recupero notifiche");
         const data = await res.json();
         setMessage(data);
@@ -29,7 +31,7 @@ export default function GestioneUtentiClient() {
     };
 
     fetchRetention();
-  }, [customer_id]);
+  }, [customer_id, backendUrl]);
 
   return (
     <>
