@@ -10,7 +10,7 @@ export default function CTA() {
           Trasforma i Dati in Crescita
         </h2>
         <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
-          Inizia oggi stesso a utilizzare l'intelligenza artificiale per salvare i tuoi clienti e aumentare le tue revenue. Prova gratuita di 14 giorni, nessuna carta di credito richiesta.
+          Inizia oggi stesso a utilizzare l&apos;intelligenza artificiale per salvare i tuoi clienti e aumentare le tue revenue. Prova gratuita di 14 giorni, nessuna carta di credito richiesta.
         </p>
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <Link href="/modello">

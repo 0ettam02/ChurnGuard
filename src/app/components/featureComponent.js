@@ -22,7 +22,7 @@ export default function FeatureSection(){
               Tecnologia Avanzata
             </h2>
             <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
-              Algoritmi di machine learning all'avanguardia per massimizzare la retention dei tuoi clienti
+              Algoritmi di machine learning all&apos;avanguardia per massimizzare la retention dei tuoi clienti
             </p>
           </div>
           
@@ -30,7 +30,7 @@ export default function FeatureSection(){
             <FeatureCard
               icon="🤖"
               title="IA Predittiva"
-              description="Algoritmi di machine learning che analizzano comportamenti, frequenza di utilizzo e pattern di engagement per predire l'abbandono con precisione superiore al 90%."
+              description="Algoritmi di machine learning che analizzano comportamenti, frequenza di utilizzo e pattern di engagement per predire l&apos;abbandono con precisione superiore al 90%."
               delay={0}
             />
             <FeatureCard

@@ -14,11 +14,11 @@ export default function Hero(){
         
         <div className="max-w-7xl mx-auto relative z-10">
           <h1 className="text-6xl md:text-8xl font-extrabold mb-6 bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent leading-tight animate-pulse">
-            Predici l'Abbandono.<br />Salva i Clienti.
+            Predici l&apos;Abbandono.<br />Salva i Clienti.
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Utilizza l'intelligenza artificiale per identificare i clienti a rischio di abbandono e attiva strategie di retention mirate. Perfetto per palestre, centri fitness e PMI.
+            Utilizza l&apos;intelligenza artificiale per identificare i clienti a rischio di abbandono e attiva strategie di retention mirate. Perfetto per palestre, centri fitness e PMI.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
