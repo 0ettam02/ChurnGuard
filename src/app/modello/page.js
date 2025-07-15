@@ -27,7 +27,7 @@ export default function Modello() {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
     async function handleClick() {
-        const res = await fetch(`${backendUrl}/predict`, {
+        const res = await fetch(`https://churnguard-juao.onrender.com/predict`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

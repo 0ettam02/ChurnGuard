@@ -70,7 +70,7 @@ def datasets(path):
 
     return df_encoded, df_noChurn
 
-
+df = datasets("dataset1.csv")
 # SEZIONE VERIFICA CHURN----------------------------------------------------------------------------------
 class InputUtente(BaseModel):
     eta: float
