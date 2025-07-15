@@ -8,3 +8,5 @@ python-dotenv
 joblib
 matplotlib
 google-generativeai
+python-multipart
+
