@@ -24,8 +24,8 @@ import os
 model_churn = joblib.load("modello_churn.pkl")
 model_mese_abbandono = joblib.load("modello_ultima_presenza.pkl")
 
-df_encoded = None
-df_noChurn = None
+# df_encoded = None
+# df_noChurn = None
 
 @app.post("/modello_dataset")
 async def upload_dataset(file: UploadFile = File(...)):

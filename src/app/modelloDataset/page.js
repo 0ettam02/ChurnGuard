@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '../components/headerComponent';
 
-export default function SceltaFunzionalita() {
+export default function ModelloDataset() {
   const [isClient, setIsClient] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -25,7 +25,7 @@ export default function SceltaFunzionalita() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(`${backendUrl}/modello_dataset`, {
+      const res = await fetch(`https://churnguard-juao.onrender.com/modello_dataset`, {
         method: "POST",
         body: formData,
       });
