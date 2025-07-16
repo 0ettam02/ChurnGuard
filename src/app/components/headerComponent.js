@@ -13,7 +13,7 @@ export default function Header() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`${backendUrl}/utenti_rischio`);
+        const res = await fetch(`https://churnguard-juao.onrender.com/utenti_rischio`);
         if (!res.ok) throw new Error("Errore nel recupero notifiche");
         const data = await res.json();
         setNotifications(data);

@@ -8,7 +8,7 @@ export default function IstogrammaFrequenzaAbbandoni() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
-    fetch(`${backendUrl}/istogramma_distribuzione_frequenza_abbandoni`)
+    fetch(`https://churnguard-juao.onrender.com/istogramma_distribuzione_frequenza_abbandoni`)
       .then(res => res.json())
       .then(json => {
         console.log(json);

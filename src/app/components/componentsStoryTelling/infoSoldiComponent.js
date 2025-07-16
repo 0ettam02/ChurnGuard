@@ -19,7 +19,7 @@ export default function InfoSoldi({
     useEffect(() => {
         const fetchInfoSoldi = async () => {
           try {
-            const res = await fetch(`${backendUrl}/info_soldi`, {
+            const res = await fetch(`https://churnguard-juao.onrender.com/info_soldi`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"

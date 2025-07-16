@@ -19,7 +19,7 @@ export default function GestioneUtentiClient() {
     const fetchRetention = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${backendUrl}/retention/?customer_id=${customer_id}`);
+        const res = await fetch(`https://churnguard-juao.onrender.com/retention/?customer_id=${customer_id}`);
         if (!res.ok) throw new Error("Errore nel recupero notifiche");
         const data = await res.json();
         setMessage(data);

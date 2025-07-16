@@ -12,7 +12,7 @@ export default function GraficoAbbandoniPerAbbonamento() {
 
 
   useEffect(() => {
-    fetch(`${backendUrl}/grafico_abbandoni_per_abbonamento`)
+    fetch(`https://churnguard-juao.onrender.com/grafico_abbandoni_per_abbonamento`)
       .then(res => res.json())
       .then(json => {
         console.log(json);

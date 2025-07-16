@@ -23,7 +23,7 @@ export default function StatsGenerali({
   useEffect(() => {
     const fetchChurnInfo = async () => {
       try {
-        const res = await fetch(`${backendUrl}/churn_info`);
+        const res = await fetch(`https://churnguard-juao.onrender.com/churn_info`);
         const json = await res.json();
         setData(json);
       } catch (err) {
@@ -37,7 +37,7 @@ export default function StatsGenerali({
   useEffect(() => {
     const fetchChurnInfoMensili = async () => {
       try {
-        const res = await fetch(`${backendUrl}/churn_info_mensili`, {
+        const res = await fetch(`https://churnguard-juao.onrender.com/churn_info_mensili`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -82,7 +82,7 @@ export default function StatsGenerali({
   useEffect(() => {
     const fetchChurnPresenzSett = async () => {
       try {
-        const res = await fetch(`${backendUrl}/churn_presenzaSett`);
+        const res = await fetch(`https://churnguard-juao.onrender.com/churn_presenzaSett`);
         const json = await res.json();
         setDataSett(json);
       } catch (err) {
