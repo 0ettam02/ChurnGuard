@@ -245,7 +245,7 @@ def utenti_rischio():
         tutti_valori_utenti.append(valori_utenti[0])
 
 
-    modello = joblib.load("/home/matteo/matteo/programmazione/saaschurnpalestre/python/modello_churn.pkl")
+    modello = joblib.load("modello_churn.pkl")
 
     np_valori_utenti = np.array(tutti_valori_utenti)
 
@@ -274,7 +274,7 @@ def utenti_rischio():
         tutti_valori_utenti.append(valori_utenti[0])
 
 
-    modello = joblib.load("/home/matteo/matteo/programmazione/saaschurnpalestre/python/modello_churn.pkl")
+    modello = joblib.load("modello_churn.pkl")
 
     np_valori_utenti = np.array(tutti_valori_utenti)
 
@@ -310,7 +310,7 @@ def retention(customer_id: str = Query(...)):
     dati = "età,prezzo_abbonamento,media_presenze_sett,giorni_da_ultima_presenza,anno_iscrizione,mese_iscrizione,mese_ultima_presenza,tipo_abbonamento_encoder,sesso_F,sesso_M"
     lista = dati.split(",")
 
-    modello = joblib.load("/home/matteo/matteo/programmazione/saaschurnpalestre/python/modello_churn.pkl")
+    modello = joblib.load("modello_churn.pkl")
 
     valore_media = df[df["customer_id"] == utente]["media_presenze_sett"].values
     valore_giorni = df[df["customer_id"] == utente]["giorni_da_ultima_presenza"].values
