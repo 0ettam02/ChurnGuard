@@ -24,8 +24,8 @@ import os
 model_churn = joblib.load("modello_churn.pkl")
 model_mese_abbandono = joblib.load("modello_ultima_presenza.pkl")
 
-# df_encoded = None
-# df_noChurn = None
+df_encoded = None
+df_noChurn = None
 
 @app.post("/modello_dataset")
 async def upload_dataset(file: UploadFile = File(...)):
@@ -38,12 +38,17 @@ async def upload_dataset(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        global df_encoded, df_noChurn
         df_encoded, df_noChurn = datasets(file_path)
+
+        processed_dir = "processed_data"
+        os.makedirs(processed_dir, exist_ok=True)
+        df_noChurn_path = os.path.join(processed_dir, "no_churn.csv")
+        df_noChurn.to_csv(df_noChurn_path, index=False)
 
         return {
             "message": "Dataset caricato e processato correttamente.",
-            "path": file_path
+            "path": file_path,
+            "saved_to": df_noChurn_path
         }
 
     except Exception as e:
@@ -69,7 +74,6 @@ def datasets(path):
     df_noChurn = df_encoded[df_encoded["churn"] == 0]
 
     return df_encoded, df_noChurn
-df_encoded, df_noChurn = datasets("dataset1.csv")
 
 # SEZIONE VERIFICA CHURN----------------------------------------------------------------------------------
 class InputUtente(BaseModel):
@@ -292,230 +296,148 @@ def utenti_rischio():
     return notifiche
 
 # SEZIONE RETENTION----------------------------------------------------------------
+from fastapi import Query, HTTPException
+import pandas as pd
+import os
+import numpy as np
+import joblib
+from google import genai
+from google.genai import types
+
 @app.get("/retention")
 def retention(customer_id: str = Query(...)):
-    utente = customer_id
-    # To run this code you need to install the following dependencies:
-    # pip install google-genai
-    import pandas as pd
-    import base64
-    import os
-    from google import genai
-    from google.genai import types
-    import joblib
-    import numpy as np
+    # Percorso del dataset salvato
+    dataset_path = "processed_data/no_churn.csv"
 
-    df = df_noChurn
+    # Controlla che il file esista
+    if not os.path.exists(dataset_path):
+        raise HTTPException(status_code=500, detail="Dataset non caricato. Caricalo prima con /modello_dataset")
 
+    # Carica il dataset
+    df = pd.read_csv(dataset_path)
+
+    if customer_id not in df["customer_id"].values:
+        raise HTTPException(status_code=404, detail=f"Utente {customer_id} non trovato")
+
+    # Seleziona le colonne necessarie per la predizione
     dati = "età,prezzo_abbonamento,media_presenze_sett,giorni_da_ultima_presenza,anno_iscrizione,mese_iscrizione,mese_ultima_presenza,tipo_abbonamento_encoder,sesso_F,sesso_M"
     lista = dati.split(",")
 
+    valore_media = float(df[df["customer_id"] == customer_id]["media_presenze_sett"].values[0])
+    valore_giorni = int(df[df["customer_id"] == customer_id]["giorni_da_ultima_presenza"].values[0])
+
     modello = joblib.load("modello_churn.pkl")
-
-    valore_media = df[df["customer_id"] == utente]["media_presenze_sett"].values
-    valore_giorni = df[df["customer_id"] == utente]["giorni_da_ultima_presenza"].values
-    print(valore_media)
-    if valore_media < 0.5 and valore_giorni < 20:
-        valori = df[df["customer_id"]==utente][lista]
-        np_valori = np.array(valori)
-        pred = modello.predict(np_valori)
-        print(f"il modello ipotizza che l'utente {utente} potrebbe abbandonandonare la palestra perchè ha una media presenze settimanali troppo bassa, più precisamente {valore_media}. Bisogna fare un lavoro mirato per evitare che abbandoni")
-    elif valore_media > 0.5 and valore_giorni > 20:
-        valori = df[df["customer_id"]==utente][lista]
-        np_valori = np.array(valori)
-        pred = modello.predict(np_valori)
-        print(f"il modello ipotizza che l'utente {utente} potrebbe abbandonare perchè non si presenta da {valore_giorni} giorni. Bisogna fare un lavoro mirato per evitare che abbandoni")
-    else:
-        valori = df[df["customer_id"]==utente][lista]
-        np_valori = np.array(valori)
-        pred = modello.predict(np_valori)
-        print(f"il modello ipotizza che l'utente {utente} potrebbe abbandonandonare la palestra perchè ha una media presenze settimanali troppo bassa, più precisamente {valore_media}, e anche perchè non si presenta da {valore_giorni} giorni. Bisogna fare un lavoro mirato per evitare che abbandoni")
-
-
-    def generate1():
-        client = genai.Client(
-            api_key=os.environ.get("GEMINI_API_KEY"),
-        )
-
-        model = "gemini-2.5-flash"
-        contents = [
-            types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(text="""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
-
-        Importantissimo: basati su questi dati statistici comprovati e su ciò che funziona davvero nel settore fitness.
-
-        Le tecniche a tua disposizione includono:
-
-            Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi. → Chiama/contatta settimanalmente, celebra piccole milestone (es. “5 sessioni”).
-
-            Programmi personalizzati e coaching: Aumentano retention fino al 60%, raddoppiano la permanenza. → Offri check-up, piani individuali, progress tracking.
-
-            Classi di gruppo e comunità: +26–40% retention. → Organizza sfide mensili, eventi social, premi visibili.
-
-            Comunicazione costante e automatizzata: +20–30% retention con email, reminder, notifiche. → Notifiche per chi frequenta poco, promo mirate.
-
-            Gamification e programmi fedeltà: +40% retention con badge, punti, premi. → Crea leaderboard, premi reali (lezioni gratuite, gadget).
-
-            Regalo di mesi gratuiti nei casi più critici: Offrilo quando il rischio abbandono è massimo.
-
-        Ora ti fornisco i dati utente. Voglio una risposta in elenco, breve e attuabile, 3 punti massimo, scritti per un proprietario che ha poco tempo ma vuole agire subito.
-
-        Dati utente esempio 
-        media presenza settimanali: {valore_media}
-
-
-
-        Scrivi solo le 3 azioni più efficaci per questo profilo. Mi raccomando, fai le tecniche nel modo quanto piu' custom possibile per quell'utente considerando tutte le opzioni"""),
-                ],
-            ),
-        ]
-        tools = [
-            types.Tool(googleSearch=types.GoogleSearch(
-            )),
-        ]
-        generate_content_config = types.GenerateContentConfig(
-            thinking_config = types.ThinkingConfig(
-                thinking_budget=-1,
-            ),
-            tools=tools,
-            response_mime_type="text/plain",
-        )
-
-        risposta = ""
-        for chunk in client.models.generate_content_stream(model=model, contents=contents, config=generate_content_config):
-            risposta += chunk.text
-        return risposta.strip()
-    # ----------------------------------------------------------------------------------------------------------------
-    def generate2():
-        client = genai.Client(
-            api_key=os.environ.get("GEMINI_API_KEY"),
-        )
-
-        model = "gemini-2.5-flash"
-        contents = [
-            types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(text="""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
-
-        Importantissimo: basati su questi dati statistici comprovati e su ciò che funziona davvero nel settore fitness.
-
-        Le tecniche a tua disposizione includono:
-
-            Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi. → Chiama/contatta settimanalmente, celebra piccole milestone (es. “5 sessioni”).
-
-            Programmi personalizzati e coaching: Aumentano retention fino al 60%, raddoppiano la permanenza. → Offri check-up, piani individuali, progress tracking.
-
-            Classi di gruppo e comunità: +26–40% retention. → Organizza sfide mensili, eventi social, premi visibili.
-
-            Comunicazione costante e automatizzata: +20–30% retention con email, reminder, notifiche. → Notifiche per chi frequenta poco, promo mirate.
-
-            Gamification e programmi fedeltà: +40% retention con badge, punti, premi. → Crea leaderboard, premi reali (lezioni gratuite, gadget).
-
-            Regalo di mesi gratuiti nei casi più critici: Offrilo quando il rischio abbandono è massimo.
-
-        Ora ti fornisco i dati utente. Voglio una risposta in elenco, breve e attuabile, 3 punti massimo, scritti per un proprietario che ha poco tempo ma vuole agire subito.
-
-        Dati utente esempio 
-        numero giorni da ultima presenza: {valore_giorni}
-
-
-
-        Scrivi solo le 3 azioni più efficaci per questo profilo. Mi raccomando, fai le tecniche nel modo quanto piu' custom possibile per quell'utente considerando tutte le opzioni"""),
-
-                ],
-            ),
-        ]
-        tools = [
-            types.Tool(googleSearch=types.GoogleSearch(
-            )),
-        ]
-        generate_content_config = types.GenerateContentConfig(
-            thinking_config = types.ThinkingConfig(
-                thinking_budget=-1,
-            ),
-            tools=tools,
-            response_mime_type="text/plain",
-        )
-
-        risposta = ""
-        for chunk in client.models.generate_content_stream(model=model, contents=contents, config=generate_content_config):
-            risposta += chunk.text
-        return risposta.strip()
-    # ----------------------------------------------------------------------------------------------------------------
-
-    def generate3():
-        client = genai.Client(
-            api_key=os.environ.get("GEMINI_API_KEY"),
-        )
-
-        model = "gemini-2.5-flash"
-        contents = [
-            types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(text="""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
-
-        Importantissimo: basati su questi dati statistici comprovati e su ciò che funziona davvero nel settore fitness.
-
-        Le tecniche a tua disposizione includono:
-
-            Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi. → Chiama/contatta settimanalmente, celebra piccole milestone (es. “5 sessioni”).
-
-            Programmi personalizzati e coaching: Aumentano retention fino al 60%, raddoppiano la permanenza. → Offri check-up, piani individuali, progress tracking.
-
-            Classi di gruppo e comunità: +26–40% retention. → Organizza sfide mensili, eventi social, premi visibili.
-
-            Comunicazione costante e automatizzata: +20–30% retention con email, reminder, notifiche. → Notifiche per chi frequenta poco, promo mirate.
-
-            Gamification e programmi fedeltà: +40% retention con badge, punti, premi. → Crea leaderboard, premi reali (lezioni gratuite, gadget).
-
-            Regalo di mesi gratuiti nei casi più critici: Offrilo quando il rischio abbandono è massimo.
-
-        Ora ti fornisco i dati utente. Voglio una risposta in elenco, breve e attuabile, 3 punti massimo, scritti per un proprietario che ha poco tempo ma vuole agire subito.
-
-        Dati utente esempio 
-        media presenza settimanali: {valore_media}
-        numero giorni da ultima presenza: {valore_giorni}
-
-
-
-        Scrivi solo le 3 azioni più efficaci per questo profilo. Mi raccomando, fai le tecniche nel modo quanto piu' custom possibile per quell'utente considerando tutte le opzioni"""),
-
-                ],
-            ),
-        ]
-        tools = [
-            types.Tool(googleSearch=types.GoogleSearch(
-            )),
-        ]
-        generate_content_config = types.GenerateContentConfig(
-            thinking_config = types.ThinkingConfig(
-                thinking_budget=-1,
-            ),
-            tools=tools,
-            response_mime_type="text/plain",
-        )
-
-        risposta = ""
-        for chunk in client.models.generate_content_stream(model=model, contents=contents, config=generate_content_config):
-            risposta += chunk.text or ""
-        risposta = risposta.replace("{valore_media}", str(valore_media))
-        risposta = risposta.replace("{valore_giorni}", str(valore_giorni))
-        return risposta.strip()
-
-    valore_media = float(valore_media[0])
-    valore_giorni = int(valore_giorni[0])
+    valori = df[df["customer_id"] == customer_id][lista]
+    np_valori = np.array(valori)
+    pred = modello.predict(np_valori)
 
     if valore_media < 0.5 and valore_giorni < 20:
-        messaggio = generate1()
+        messaggio = generate1(valore_media)
     elif valore_media > 0.5 and valore_giorni > 20:
-        messaggio = generate2()
+        messaggio = generate2(valore_giorni)
     else:
-        messaggio = generate3()
+        messaggio = generate3(valore_media, valore_giorni)
 
     return {
         "azione_retenzione_consigliata": messaggio
     }
+
+# -----------------------------------------------------------------------------
+def generate1(valore_media):
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = "gemini-2.5-flash"
+
+    prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
+
+Importantissimo: basati su questi dati statistici comprovati e su ciò che funziona davvero nel settore fitness.
+
+Le tecniche a tua disposizione includono:
+
+    Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi. → Chiama/contatta settimanalmente, celebra piccole milestone (es. “5 sessioni”).
+    Programmi personalizzati e coaching: Aumentano retention fino al 60%, raddoppiano la permanenza.
+    Classi di gruppo e comunità: +26–40% retention.
+    Comunicazione automatizzata: +20–30% retention con email, reminder, notifiche.
+    Gamification e premi: +40% retention.
+    Regalo di mesi gratuiti: nei casi più critici.
+
+Dati utente esempio:
+- media presenza settimanali: {valore_media}
+
+Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e applicabile subito.
+"""
+
+    contents = [
+        types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
+    ]
+
+    risposta = ""
+    for chunk in client.models.generate_content_stream(model=model, contents=contents):
+        risposta += chunk.text or ""
+    return risposta.strip()
+
+# -----------------------------------------------------------------------------
+def generate2(valore_giorni):
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = "gemini-2.5-flash"
+
+    prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
+
+Importantissimo: basati su questi dati statistici comprovati e su ciò che funziona davvero nel settore fitness.
+
+Le tecniche a tua disposizione includono:
+
+    Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi.
+    Programmi personalizzati e coaching.
+    Classi di gruppo e comunità.
+    Comunicazione automatizzata.
+    Gamification e premi.
+    Regalo di mesi gratuiti: nei casi più critici.
+
+Dati utente esempio:
+- giorni da ultima presenza: {valore_giorni}
+
+Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e applicabile subito.
+"""
+
+    contents = [
+        types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
+    ]
+
+    risposta = ""
+    for chunk in client.models.generate_content_stream(model=model, contents=contents):
+        risposta += chunk.text or ""
+    return risposta.strip()
+
+# -----------------------------------------------------------------------------
+def generate3(valore_media, valore_giorni):
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = "gemini-2.5-flash"
+
+    prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
+
+Importantissimo: basati su dati reali e strategie efficaci nel settore fitness.
+
+Le tecniche a tua disposizione includono:
+
+    Onboarding primi 90 giorni.
+    Programmi personalizzati e coaching.
+    Classi di gruppo e comunità.
+    Comunicazione automatizzata.
+    Gamification e premi.
+    Regalo di mesi gratuiti nei casi critici.
+
+Dati utente esempio:
+- media presenza settimanali: {valore_media}
+- giorni da ultima presenza: {valore_giorni}
+
+Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e attuabile subito.
+"""
+
+    contents = [
+        types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
+    ]
+
+    risposta = ""
+    for chunk in client.models.generate_content_stream(model=model, contents=contents):
+        risposta += chunk.text or ""
+    return risposta.strip()
