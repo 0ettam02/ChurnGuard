@@ -87,7 +87,7 @@ const ChurnGuardHomepage = () => {
 
       {/* Header */}
       <Header />
-      cia
+      ciao
       {/* Hero Section */}
       <Hero />
 
