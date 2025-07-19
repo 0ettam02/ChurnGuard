@@ -32,4 +32,8 @@ npm run start
 Give a ⭐️ if this project helped you!
 
 ***
+<<<<<<< HEAD
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
+=======
+_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
+>>>>>>> adf7dd7 (some modify)

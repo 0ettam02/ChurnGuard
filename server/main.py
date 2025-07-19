@@ -29,10 +29,11 @@ df_noChurn = None
 
 @app.post("/modello_dataset")
 async def upload_dataset(file: UploadFile = File(...)):
+    global df_encoded, df_noChurn
+
     try:
         upload_dir = "uploaded_datasets"
         os.makedirs(upload_dir, exist_ok=True)
-
         file_path = os.path.join(upload_dir, file.filename)
 
         with open(file_path, "wb") as buffer:
@@ -40,19 +41,15 @@ async def upload_dataset(file: UploadFile = File(...)):
 
         df_encoded, df_noChurn = datasets(file_path)
 
-        processed_dir = "processed_data"
-        os.makedirs(processed_dir, exist_ok=True)
-        df_noChurn_path = os.path.join(processed_dir, "no_churn.csv")
-        df_noChurn.to_csv(df_noChurn_path, index=False)
-
         return {
             "message": "Dataset caricato e processato correttamente.",
-            "path": file_path,
-            "saved_to": df_noChurn_path
+            "record_totali": len(df_encoded),
+            "record_noChurn": len(df_noChurn)
         }
 
     except Exception as e:
         return {"error": f"Errore durante il caricamento: {str(e)}"}
+
 
 def datasets(path):
     df = pd.read_csv(path)
@@ -309,20 +306,16 @@ from google.generativeai import types
 
 @app.get("/retention")
 def retention(customer_id: str = Query(...)):
-    # Percorso del dataset salvato
-    dataset_path = "processed_data/no_churn.csv"
+    global df_noChurn
 
-    # Controlla che il file esista
-    if not os.path.exists(dataset_path):
-        raise HTTPException(status_code=500, detail="Dataset non caricato. Caricalo prima con /modello_dataset")
+    if df_noChurn is None:
+        raise HTTPException(status_code=500, detail="Dataset non caricato. Usa prima /modello_dataset")
 
-    # Carica il dataset
-    df = pd.read_csv(dataset_path)
+    df = df_noChurn
 
     if customer_id not in df["customer_id"].values:
         raise HTTPException(status_code=404, detail=f"Utente {customer_id} non trovato")
 
-    # Seleziona le colonne necessarie per la predizione
     dati = "età,prezzo_abbonamento,media_presenze_sett,giorni_da_ultima_presenza,anno_iscrizione,mese_iscrizione,mese_ultima_presenza,tipo_abbonamento_encoder,sesso_F,sesso_M"
     lista = dati.split(",")
 
@@ -342,8 +335,10 @@ def retention(customer_id: str = Query(...)):
         messaggio = generate3(valore_media, valore_giorni)
 
     return {
-        "azione_retenzione_consigliata": messaggio
+        "azione_retenzione_consigliata": messaggio,
+        "churn_probabile": bool(pred[0])
     }
+
 
 # -----------------------------------------------------------------------------
 def generate1(valore_media):
