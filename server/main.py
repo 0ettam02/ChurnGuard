@@ -110,6 +110,7 @@ def predizione_dati(dati: InputUtente):
 
 @app.get("/churn_info")
 def churn_info():
+    global df_encoded
     totale_churn1 = len(df_encoded[df_encoded["churn"] == 1])
     media_churn = (df_encoded["churn"] == 1).mean()
     return {
@@ -126,6 +127,7 @@ class InputDati(BaseModel):
 
 @app.post("/churn_info_mensili")
 def churn_info_mensili(input_data: InputDati):
+    global df_encoded
     valori_presenza = np.array(input_data.valori)
     valori_presenza_2d = valori_presenza.reshape(1, -1)
 
@@ -163,6 +165,7 @@ def churn_info_mensili(input_data: InputDati):
 
 @app.get("/churn_presenzaSett")
 def churn_presenzaSett():
+    global df_encoded
     media_presenzeSett_churn = df_encoded[df_encoded["churn"] == 1]["media_presenze_sett"].mean()
     media_presenzeSett_non_churn = df_encoded[df_encoded["churn"] == 0]["media_presenze_sett"].mean()
 
@@ -180,6 +183,7 @@ def churn_presenzaSett():
 
 @app.get("/istogramma_distribuzione_frequenza_abbandoni")
 def istogramma_distribuzione_frequenza_abbandoni():
+    global df_encoded
     from fastapi.responses import JSONResponse
 
     x = df_encoded[df_encoded["churn"] == 1]["età"]
@@ -196,6 +200,7 @@ def istogramma_distribuzione_frequenza_abbandoni():
 
 @app.get("/grafico_abbandoni_per_abbonamento")
 def grafico_abbandoni_per_abbonamento():
+    global df_encoded
     from fastapi.responses import JSONResponse
     import matplotlib.pyplot as plt
 
@@ -212,6 +217,7 @@ def grafico_abbandoni_per_abbonamento():
 
 @app.post("/info_soldi")
 def info_soldi(input_data: InputDati):
+    global df_encoded
 
     soldi = input_data.valori[1]
     mese_finale = input_data.valori[6]
@@ -230,6 +236,7 @@ def info_soldi(input_data: InputDati):
 # SEZIONE ALERT---------------------------------------------------------------------------------------
 @app.get("/utenti_rischio")
 def utenti_rischio():
+    global df_noChurn
     import numpy as np
     import joblib
 
