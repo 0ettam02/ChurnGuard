@@ -11,10 +11,16 @@ import os
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 app = FastAPI()
 
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://<DOMINIO_FRONTEND>.onrender.com",  # sostituisci col dominio del frontend su Render
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=False,  # usi Authorization Bearer, non cookie
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -436,12 +442,10 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import os
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from fastapi import HTTPException
 
 # ----------------- DB (SQLite) -----------------
 DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'users.db')}"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
 
@@ -484,8 +488,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
 
-from pydantic import BaseModel, ConfigDict
-
+from pydantic import BaseModel
 class UserCreate(BaseModel):
     email: str
     password: str
@@ -495,7 +498,8 @@ class UserOut(BaseModel):
     id: int
     email: str
     full_name: str | None = None
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True  # pydantic v2
 
 class Token(BaseModel):
     access_token: str
@@ -528,30 +532,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 # ----------------- Endpoints -----------------
 @app.post("/auth/register", response_model=UserOut, status_code=201)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    try:
-        if get_user_by_email(db, user_in.email):
-            raise HTTPException(status_code=400, detail="Email già registrata")
-        user = User(
-            email=user_in.email,
-            hashed_password=hash_password(user_in.password),
-            full_name=user_in.full_name
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
-    except HTTPException as e:
-        # lascia passare i 400/… senza trasformarli in 500
-        raise e
-    except IntegrityError:
-        db.rollback()
+    if get_user_by_email(db, user_in.email):
         raise HTTPException(status_code=400, detail="Email già registrata")
-    except SQLAlchemyError as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Errore DB: {str(e)}")
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Errore registrazione inatteso")
+    user = User(
+        email=user_in.email,
+        hashed_password=hash_password(user_in.password),
+        full_name=user_in.full_name
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 # Usa form-data: username=<email>, password=<password>
 @app.post("/auth/login", response_model=Token)
