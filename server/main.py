@@ -19,7 +19,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=False,  # usi Authorization Bearer, non cookie
     allow_methods=["*"],
     allow_headers=["*"],
@@ -366,7 +366,7 @@ def generate1(valore_media):
     from fastapi import HTTPException
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=500, detail="Chiave API Gemini mancante: imposta GOOGLE_API_KEY o GEMINI_API_KEY")
+        raise HTTPException(status_code=500, detail="Chiave API Gemini mancante (imposta GOOGLE_API_KEY o GEMINI_API_KEY)")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
@@ -394,7 +394,7 @@ def generate2(valore_giorni):
     from fastapi import HTTPException
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=500, detail="Chiave API Gemini mancante: imposta GOOGLE_API_KEY o GEMINI_API_KEY")
+        raise HTTPException(status_code=500, detail="Chiave API Gemini mancante (imposta GOOGLE_API_KEY o GEMINI_API_KEY)")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
@@ -422,7 +422,7 @@ def generate3(valore_media, valore_giorni):
     from fastapi import HTTPException
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=500, detail="Chiave API Gemini mancante: imposta GOOGLE_API_KEY o GEMINI_API_KEY")
+        raise HTTPException(status_code=500, detail="Chiave API Gemini mancante (imposta GOOGLE_API_KEY o GEMINI_API_KEY)")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
