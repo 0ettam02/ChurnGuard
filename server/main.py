@@ -20,7 +20,7 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,  # usi Authorization Bearer, non cookie
+    allow_credentials=True,  # usi Authorization Bearer, non cookie
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -456,7 +456,7 @@ from datetime import datetime, timedelta
 import os
 
 # ----------------- DB (SQLite) -----------------
-DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'users.db')}"
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'users.db')}")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
