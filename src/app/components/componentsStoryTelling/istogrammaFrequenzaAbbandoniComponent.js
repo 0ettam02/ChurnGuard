@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function IstogrammaFrequenzaAbbandoni() {
   const [data, setData] = useState([]);
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
-    fetch(`https://churnguard-juao.onrender.com/istogramma_distribuzione_frequenza_abbandoni`)
+    fetch(`${API_URL}/istogramma_distribuzione_frequenza_abbandoni`)
       .then(res => res.json())
       .then(json => {
         console.log(json);

@@ -4,6 +4,7 @@ import { useEffect, useState} from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function GraficoAbbandoniPerAbbonamento() {
   const [data, setData] = useState([]);
@@ -12,7 +13,7 @@ export default function GraficoAbbandoniPerAbbonamento() {
 
 
   useEffect(() => {
-    fetch(`https://churnguard-juao.onrender.com/grafico_abbandoni_per_abbonamento`)
+    fetch(`${API_URL}/grafico_abbandoni_per_abbonamento`)
       .then(res => res.json())
       .then(json => {
         console.log(json);

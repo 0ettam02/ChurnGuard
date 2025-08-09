@@ -1,19 +1,28 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
+
+  useEffect(() => {
+    setIsAuth(!!localStorage.getItem("token"));
+  }, [pathname]);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`https://churnguard-juao.onrender.com/utenti_rischio`);
+        const res = await fetch(`${API_URL}/utenti_rischio`);
         if (!res.ok) throw new Error("Errore nel recupero notifiche");
         const data = await res.json();
         setNotifications(data);
@@ -34,6 +43,12 @@ export default function Header() {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsAuth(false);
+    router.push("/"); // torna alla home senza pagina intermedia
+  };
+
   return (
     <header className="fixed top-0 w-full bg-black/20 backdrop-blur-lg border-b border-white/10 z-50">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -43,7 +58,7 @@ export default function Header() {
           </div>
         </Link>
 
-        <div className="hidden md:flex space-x-8">
+        <div className="hidden md:flex space-x-8 items-center">
           <a href="#features" className="text-white/80 hover:text-cyan-400 transition-colors px-4 py-2 rounded-lg hover:bg-white/10">
             Funzionalità
           </a>
@@ -56,6 +71,29 @@ export default function Header() {
           <a href="#contact" className="text-white/80 hover:text-cyan-400 transition-colors px-4 py-2 rounded-lg hover:bg-white/10">
             Contatti
           </a>
+          {!isAuth ? (
+            <>
+              <Link href="/login" className="text-white/80 hover:text-cyan-400 px-4 py-2 rounded-lg hover:bg-white/10">
+                Login
+              </Link>
+              <Link href="/signup" className="text-white/80 hover:text-cyan-400 px-4 py-2 rounded-lg hover:bg-white/10">
+                Registrati
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/profilo" className="text-white/80 hover:text-cyan-400 px-4 py-2 rounded-lg hover:bg-white/10">
+                Profilo
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-white/80 hover:text-red-400 px-4 py-2 rounded-lg hover:bg-white/10"
+                type="button"
+              >
+                Logout
+              </button>
+            </>
+          )}
         </div>
 
         <div className="relative">

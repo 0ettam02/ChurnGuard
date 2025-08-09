@@ -9,4 +9,6 @@ joblib
 matplotlib
 google-generativeai
 python-multipart
-
+sqlalchemy
+passlib[bcrypt]
+python-jose[cryptography]

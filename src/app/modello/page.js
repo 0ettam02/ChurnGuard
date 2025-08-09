@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '../components/headerComponent';
 import { Button } from "@heroui/button";
 import Charts from '../components/chartsComponent';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Modello() {
     const [isClient, setIsClient] = useState(false);
@@ -23,11 +24,9 @@ export default function Modello() {
     const [meseAbbandono, setMeseAbbandono] = useState(null);
     const [risultato, setRisultato] = useState(null);
 
-    // Usa la variabile d'ambiente per l'URL backend
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
     async function handleClick() {
-        const res = await fetch(`https://churnguard-juao.onrender.com/predict`, {
+        const res = await fetch(`${API_URL}/predict`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

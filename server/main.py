@@ -6,8 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from dotenv import load_dotenv
-load_dotenv()
+import os
 
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 app = FastAPI()
 
 app.add_middleware(
@@ -21,8 +22,10 @@ from fastapi import UploadFile, File
 import shutil
 import os
 
-model_churn = joblib.load("modello_churn.pkl")
-model_mese_abbandono = joblib.load("modello_ultima_presenza.pkl")
+BASE_DIR = os.path.dirname(__file__)
+
+model_churn = joblib.load(os.path.join(BASE_DIR, "modello_churn.pkl"))
+model_mese_abbandono = joblib.load(os.path.join(BASE_DIR, "modello_ultima_presenza.pkl"))
 
 df_encoded = None
 df_noChurn = None
@@ -239,6 +242,10 @@ def utenti_rischio():
     global df_noChurn
     import numpy as np
     import joblib
+    from fastapi import HTTPException
+
+    if df_noChurn is None:
+        raise HTTPException(status_code=500, detail="Dataset non caricato. Usa prima /modello_dataset")
 
     filtro_giorni = df_noChurn[df_noChurn["media_presenze_sett"] < 0.5]["customer_id"]
     lista_filtro_giorni = filtro_giorni.values.tolist()
@@ -253,7 +260,7 @@ def utenti_rischio():
         tutti_valori_utenti.append(valori_utenti[0])
 
 
-    modello = joblib.load("modello_churn.pkl")
+    modello = model_churn
 
     np_valori_utenti = np.array(tutti_valori_utenti)
 
@@ -282,7 +289,7 @@ def utenti_rischio():
         tutti_valori_utenti.append(valori_utenti[0])
 
 
-    modello = joblib.load("modello_churn.pkl")
+    modello = model_churn
 
     np_valori_utenti = np.array(tutti_valori_utenti)
 
@@ -329,7 +336,7 @@ def retention(customer_id: str = Query(...)):
     valore_media = float(df[df["customer_id"] == customer_id]["media_presenze_sett"].values[0])
     valore_giorni = int(df[df["customer_id"] == customer_id]["giorni_da_ultima_presenza"].values[0])
 
-    modello = joblib.load("modello_churn.pkl")
+    modello = model_churn
     valori = df[df["customer_id"] == customer_id][lista]
     np_valori = np.array(valori)
     pred = modello.predict(np_valori)
@@ -349,100 +356,212 @@ def retention(customer_id: str = Query(...)):
 
 # -----------------------------------------------------------------------------
 def generate1(valore_media):
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    model = "gemini-2.5-flash"
-
+    import google.generativeai as genai
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
 
 Importantissimo: basati su questi dati statistici comprovati e su ciò che funziona davvero nel settore fitness.
 
 Le tecniche a tua disposizione includono:
-
-    Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi. → Chiama/contatta settimanalmente, celebra piccole milestone (es. “5 sessioni”).
-    Programmi personalizzati e coaching: Aumentano retention fino al 60%, raddoppiano la permanenza.
-    Classi di gruppo e comunità: +26–40% retention.
-    Comunicazione automatizzata: +20–30% retention con email, reminder, notifiche.
-    Gamification e premi: +40% retention.
-    Regalo di mesi gratuiti: nei casi più critici.
+- Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi. → Chiama/contatta settimanalmente, celebra piccole milestone (es. “5 sessioni”).
+- Programmi personalizzati e coaching: Aumentano retention fino al 60%, raddoppiano la permanenza.
+- Classi di gruppo e comunità: +26–40% retention.
+- Comunicazione automatizzata: +20–30% retention con email, reminder, notifiche.
+- Gamification e premi: +40% retention.
+- Regalo di mesi gratuiti: nei casi più critici.
 
 Dati utente esempio:
 - media presenza settimanali: {valore_media}
 
-Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e applicabile subito.
-"""
-
-    contents = [
-        types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
-    ]
-
-    risposta = ""
-    for chunk in client.models.generate_content_stream(model=model, contents=contents):
-        risposta += chunk.text or ""
-    return risposta.strip()
+Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e applicabile subito."""
+    resp = model.generate_content(prompt)
+    return (resp.text or "").strip()
 
 # -----------------------------------------------------------------------------
 def generate2(valore_giorni):
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    model = "gemini-2.5-flash"
-
+    import google.generativeai as genai
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
 
 Importantissimo: basati su questi dati statistici comprovati e su ciò che funziona davvero nel settore fitness.
 
 Le tecniche a tua disposizione includono:
-
-    Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi.
-    Programmi personalizzati e coaching.
-    Classi di gruppo e comunità.
-    Comunicazione automatizzata.
-    Gamification e premi.
-    Regalo di mesi gratuiti: nei casi più critici.
+- Onboarding primi 90 giorni: 50% degli utenti inattivi abbandona entro 3 mesi.
+- Programmi personalizzati e coaching.
+- Classi di gruppo e comunità.
+- Comunicazione automatizzata.
+- Gamification e premi.
+- Regalo di mesi gratuiti: nei casi più critici.
 
 Dati utente esempio:
 - giorni da ultima presenza: {valore_giorni}
 
-Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e applicabile subito.
-"""
-
-    contents = [
-        types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
-    ]
-
-    risposta = ""
-    for chunk in client.models.generate_content_stream(model=model, contents=contents):
-        risposta += chunk.text or ""
-    return risposta.strip()
+Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e applicabile subito."""
+    resp = model.generate_content(prompt)
+    return (resp.text or "").strip()
 
 # -----------------------------------------------------------------------------
 def generate3(valore_media, valore_giorni):
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    model = "gemini-2.5-flash"
-
+    import google.generativeai as genai
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""Sei un esperto in retention per centri fitness. Devi suggerire in modo concreto e conciso le 3 azioni migliori per trattenere un utente specifico che vuole abbandonare la palestra.
 
 Importantissimo: basati su dati reali e strategie efficaci nel settore fitness.
 
 Le tecniche a tua disposizione includono:
-
-    Onboarding primi 90 giorni.
-    Programmi personalizzati e coaching.
-    Classi di gruppo e comunità.
-    Comunicazione automatizzata.
-    Gamification e premi.
-    Regalo di mesi gratuiti nei casi critici.
+- Onboarding primi 90 giorni.
+- Programmi personalizzati e coaching.
+- Classi di gruppo e comunità.
+- Comunicazione automatizzata.
+- Gamification e premi.
+- Regalo di mesi gratuiti nei casi critici.
 
 Dati utente esempio:
 - media presenza settimanali: {valore_media}
 - giorni da ultima presenza: {valore_giorni}
 
-Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e attuabile subito.
-"""
+Scrivi solo le 3 azioni più efficaci per questo profilo. Risposta breve, concreta e attuabile subito."""
+    resp = model.generate_content(prompt)
+    return (resp.text or "").strip()
 
-    contents = [
-        types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
-    ]
 
-    risposta = ""
-    for chunk in client.models.generate_content_stream(model=model, contents=contents):
-        risposta += chunk.text or ""
-    return risposta.strip()
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+import os
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from fastapi import HTTPException
+
+# ----------------- DB (SQLite) -----------------
+DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'users.db')}"
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
+
+Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# ----------------- Security/JWT -----------------
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 giorni
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
+
+def hash_password(plain: str) -> str:
+    return pwd_context.hash(plain)
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_user_by_email(db: Session, email: str) -> User | None:
+    return db.query(User).filter(User.email == email).first()
+
+from pydantic import BaseModel, ConfigDict
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    full_name: str | None = None
+
+class UserOut(BaseModel):
+    id: int
+    email: str
+    full_name: str | None = None
+    model_config = ConfigDict(from_attributes=True)
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+def authenticate_user(db: Session, email: str, password: str) -> User | None:
+    user = get_user_by_email(db, email)
+    if not user or not verify_password(password, user.hashed_password):
+        return None
+    return user
+
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token non valido o scaduto",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str | None = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = get_user_by_email(db, email)
+    if user is None:
+        raise credentials_exception
+    return user
+
+# ----------------- Endpoints -----------------
+@app.post("/auth/register", response_model=UserOut, status_code=201)
+def register(user_in: UserCreate, db: Session = Depends(get_db)):
+    try:
+        if get_user_by_email(db, user_in.email):
+            raise HTTPException(status_code=400, detail="Email già registrata")
+        user = User(
+            email=user_in.email,
+            hashed_password=hash_password(user_in.password),
+            full_name=user_in.full_name
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+    except HTTPException as e:
+        # lascia passare i 400/… senza trasformarli in 500
+        raise e
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email già registrata")
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Errore DB: {str(e)}")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Errore registrazione inatteso")
+
+# Usa form-data: username=<email>, password=<password>
+@app.post("/auth/login", response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Credenziali non valide")
+    token = create_access_token({"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/me", response_model=UserOut)
+def me(current_user: User = Depends(get_current_user)):
+    return current_user

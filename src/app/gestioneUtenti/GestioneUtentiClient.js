@@ -4,12 +4,14 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import Header from "../components/headerComponent";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function GestioneUtentiClient() {
   const searchParams = useSearchParams();
   const customer_id = searchParams.get("customer_id");
   const [message, setMessage] = useState({});
   const [loading, setLoading] = useState(true);
+  
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -19,7 +21,7 @@ export default function GestioneUtentiClient() {
     const fetchRetention = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`https://churnguard-juao.onrender.com/retention/?customer_id=${customer_id}`);
+        const res = await fetch(`${API_URL}/retention/?customer_id=${customer_id}`);
         if (!res.ok) throw new Error("Errore nel recupero notifiche");
         const data = await res.json();
         setMessage(data);

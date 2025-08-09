@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function InfoSoldi({ 
     eta,
@@ -19,7 +20,7 @@ export default function InfoSoldi({
     useEffect(() => {
         const fetchInfoSoldi = async () => {
           try {
-            const res = await fetch(`https://churnguard-juao.onrender.com/info_soldi`, {
+            const res = await fetch(`${API_URL}/info_soldi`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function StatsGenerali({
   eta,
@@ -23,7 +24,7 @@ export default function StatsGenerali({
   useEffect(() => {
     const fetchChurnInfo = async () => {
       try {
-        const res = await fetch(`https://churnguard-juao.onrender.com/churn_info`);
+        const res = await fetch(`${API_URL}/churn_info`);
         const json = await res.json();
         setData(json);
       } catch (err) {
@@ -37,7 +38,7 @@ export default function StatsGenerali({
   useEffect(() => {
     const fetchChurnInfoMensili = async () => {
       try {
-        const res = await fetch(`https://churnguard-juao.onrender.com/churn_info_mensili`, {
+        const res = await fetch(`${API_URL}/churn_info_mensili`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -82,7 +83,7 @@ export default function StatsGenerali({
   useEffect(() => {
     const fetchChurnPresenzSett = async () => {
       try {
-        const res = await fetch(`https://churnguard-juao.onrender.com/churn_presenzaSett`);
+        const res = await fetch(`${API_URL}/churn_presenzaSett`);
         const json = await res.json();
         setDataSett(json);
       } catch (err) {
