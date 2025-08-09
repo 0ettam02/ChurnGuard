@@ -11,16 +11,10 @@ import os
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://churnguard-juao.onrender.com"
-]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,  # usi Authorization Bearer, non cookie
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
