@@ -29,6 +29,7 @@
     "@types/node": "24.2.1",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "vite": "^7.1.2"
   }
 }
