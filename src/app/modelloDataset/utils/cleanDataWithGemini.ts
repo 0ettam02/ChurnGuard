@@ -83,6 +83,11 @@ MESSY INPUT DATA (first 50 rows):
 ${JSON.stringify(data.slice(0, 50))}
 `;
 
+interface MyGenerateContentResponse {
+  text?: string;
+  structured_output?: CleanedRow[];
+}
+
 export async function cleanDataWithGemini(data: any[]): Promise<CleanedRow[]> {
   if (!data || data.length === 0) return [];
 
@@ -98,11 +103,8 @@ export async function cleanDataWithGemini(data: any[]): Promise<CleanedRow[]> {
       },
     });
 
-    interface MyGenerateContentResponse extends GenerateContentResponse {
-      structured_output?: CleanedRow[];
-    }
-
     const resp = response as MyGenerateContentResponse;
+
     const cleaned: CleanedRow[] = resp.structured_output?.length
       ? resp.structured_output
       : JSON.parse((response?.text ?? "[]").replace(/^```json\s*/i, "").replace(/```$/i, ""));
