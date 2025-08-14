@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import type { GenerateContentResponse } from "@google/genai";
 
 if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable not set");
@@ -30,7 +31,7 @@ const masterSchema = {
   },
 };
 
-const getCleaningPrompt = (data: any[]) => `
+const getCleaningPrompt = (data: Record<string, unknown>[]) => `
 You are an AI assistant that transforms messy gym membership datasets into a clean, standardized JSON format.
 
 Master dataset structure (columns and order):
@@ -70,7 +71,24 @@ MESSY INPUT DATA (first 50 rows):
 ${JSON.stringify(data.slice(0, 50))}
 `;
 
-export async function cleanDataWithGemini(data: any[]) {
+interface CleanedRow {
+  customer_id: string;
+  sesso: string;
+  età: number;
+  data_iscrizione: string;
+  tipo_abbonamento: string;
+  prezzo_abbonamento: number;
+  ultima_presenza: string;
+  media_presenze_sett: number;
+  giorni_da_ultima_presenza: number;
+  churn: number;
+}
+
+interface MyGenerateContentResponse extends GenerateContentResponse {
+  structured_output?: CleanedRow[];
+}
+
+export async function cleanDataWithGemini(data: Record<string, unknown>[]): Promise<CleanedRow[]> {
   if (!data || data.length === 0) return [];
 
   const prompt = getCleaningPrompt(data);
@@ -85,43 +103,39 @@ export async function cleanDataWithGemini(data: any[]) {
       },
     });
 
-    // Ottieni direttamente l'output strutturato
-    const cleaned = response?.structured_output?.length
-    ? response.structured_output
-    : JSON.parse((response?.text ?? "[]").replace(/^```json\s*/i, "").replace(/```$/i, ""));
-  
+    const resp = response as MyGenerateContentResponse;
+    const cleaned: CleanedRow[] = resp.structured_output?.length
+      ? resp.structured_output
+      : JSON.parse((response?.text ?? "[]").replace(/^```json\s*/i, "").replace(/```$/i, ""));
 
-    // Forza ordine colonne e valori di default
-    const ORDER = [
+    const ORDER: (keyof CleanedRow)[] = [
       "customer_id","sesso","età","data_iscrizione","tipo_abbonamento",
       "prezzo_abbonamento","ultima_presenza","media_presenze_sett",
       "giorni_da_ultima_presenza","churn"
     ];
 
-    const normalized = cleaned.map((row: any) => {
-      const out: any = {};
-      ORDER.forEach((k) => {
+    const normalized = cleaned.map(row => {
+      const out: CleanedRow = {} as CleanedRow;
+      ORDER.forEach(k => {
         let v = row?.[k];
         if (v === null || v === undefined || v === "") {
           if (["sesso","data_iscrizione","tipo_abbonamento","ultima_presenza"].includes(k)) v = "";
           else v = 0;
         }
-        // Forza numeri
         if (["età","prezzo_abbonamento","media_presenze_sett","giorni_da_ultima_presenza","churn"].includes(k)) {
           v = Number(v) || 0;
         }
-        // customer_id: genera se mancante
-        if (k === "customer_id" && (!v || !/^CUST\d{4,}$/.test(v))) {
+        if (k === "customer_id" && (!v || !/^CUST\d{4,}$/.test(String(v)))) {
           v = `CUST${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`;
         }
-        out[k] = v;
+        out[k] = v as any;
       });
       return out;
     });
 
     return normalized;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error during Gemini API call:", error);
     if (error instanceof Error && /JSON/i.test(error.message)) {
       throw new Error("The AI returned an invalid data format.");
