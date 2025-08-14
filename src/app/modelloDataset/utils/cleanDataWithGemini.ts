@@ -115,8 +115,8 @@ export async function cleanDataWithGemini(data: Record<string, unknown>[]): Prom
     ];
 
     const normalized = cleaned.map(row => {
-      const out: CleanedRow = {} as CleanedRow;
-      ORDER.forEach(k => {
+      const out = {} as CleanedRow;
+      ORDER.forEach((k: keyof CleanedRow) => {
         let v = row?.[k];
         if (v === null || v === undefined || v === "") {
           if (["sesso","data_iscrizione","tipo_abbonamento","ultima_presenza"].includes(k)) v = "";
@@ -128,10 +128,11 @@ export async function cleanDataWithGemini(data: Record<string, unknown>[]): Prom
         if (k === "customer_id" && (!v || !/^CUST\d{4,}$/.test(String(v)))) {
           v = `CUST${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`;
         }
-        out[k] = v as any;
+        out[k] = v as any; // <-- rimane, ma ora TS sa che k è keyof CleanedRow
       });
       return out;
     });
+    
 
     return normalized;
 
