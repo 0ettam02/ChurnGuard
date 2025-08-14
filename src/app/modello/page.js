@@ -73,6 +73,7 @@ export default function Modello() {
             <main className="pt-24 px-4 z-10">
                 <div className="grid gap-4 max-w-xl mx-auto items-center justify-center">
                     {/* Input */}
+                    {/* Input */}
                     <input
                         type="number"
                         placeholder="Età"

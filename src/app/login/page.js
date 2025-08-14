@@ -24,7 +24,17 @@ export default function LoginPage() {
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem("token", data.access_token);
-        router.push("/");
+        try {
+          const redirectTo = localStorage.getItem('post_login_redirect');
+          if (redirectTo) {
+            localStorage.removeItem('post_login_redirect');
+            router.push(redirectTo);
+          } else {
+            router.push("/");
+          }
+        } catch (_) {
+          router.push("/");
+        }
       } else {
         const err = await res.json().catch(() => ({}));
         setMsg(err.detail || "Credenziali non valide");

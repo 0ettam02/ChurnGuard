@@ -18,35 +18,35 @@ export default function Charts({
 }) {
   return (
     <div className='h-screnn'>
-    <div className='flex flex-col gap-4 '>
-      <div><FeatureImportanceChart /></div>
-      <div className=" flex flex-col md:flex-row mt-10 gap-8">
-      <StatsGenerali
-        eta={eta}
-        prezzoAbbonamento={prezzoAbbonamento}
-        mediaPresenze={mediaPresenze}
-        giorniUltimaPresenza={giorniUltimaPresenza}
-        annoIscrizione={annoIscrizione}
-        meseIscrizione={meseIscrizione}
-        tipoAbbonamento={tipoAbbonamento}
-        sessoF={sessoF}
-        sessoM={sessoM}
-      />
-    </div>
-    <div><IstogrammaFrequenzaAbbandoni /></div>
-    <div><GraficoAbbandoniPerAbbonamento /></div>
-    <div><InfoSoldi 
-        eta={eta}
-        prezzoAbbonamento={prezzoAbbonamento}
-        mediaPresenze={mediaPresenze}
-        giorniUltimaPresenza={giorniUltimaPresenza}
-        annoIscrizione={annoIscrizione}
-        meseIscrizione={meseIscrizione}
-        tipoAbbonamento={tipoAbbonamento}
-        sessoF={sessoF}
-        sessoM={sessoM}
-    /></div>
-    </div>
-    </div>
+      <div className='flex flex-col gap-4 '>
+        <div><FeatureImportanceChart /></div>
+        <div className=" flex flex-col md:flex-row mt-10 gap-8">
+        <StatsGenerali
+          eta={eta}
+          prezzoAbbonamento={prezzoAbbonamento}
+          mediaPresenze={mediaPresenze}
+          giorniUltimaPresenza={giorniUltimaPresenza}
+          annoIscrizione={annoIscrizione}
+          meseIscrizione={meseIscrizione}
+          tipoAbbonamento={tipoAbbonamento}
+          sessoF={sessoF}
+          sessoM={sessoM}
+        />
+      </div>
+      <div><IstogrammaFrequenzaAbbandoni /></div>
+      <div><GraficoAbbandoniPerAbbonamento /></div>
+      <div><InfoSoldi 
+          eta={eta}
+          prezzoAbbonamento={prezzoAbbonamento}
+          mediaPresenze={mediaPresenze}
+          giorniUltimaPresenza={giorniUltimaPresenza}
+          annoIscrizione={annoIscrizione}
+          meseIscrizione={meseIscrizione}
+          tipoAbbonamento={tipoAbbonamento}
+          sessoF={sessoF}
+          sessoM={sessoM}
+      /></div>
+      </div>
+      </div>
   )
 }

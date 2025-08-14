@@ -1,0 +1,5 @@
+{
+  "name": "AI Data Cleaner",
+  "description": "An AI-powered tool to clean, standardize, and transform messy Excel datasets into a master format. Upload a file, and the AI will handle column mapping, data normalization, and formatting, providing a clean Excel file for download.",
+  "requestFramePermissions": []
+}

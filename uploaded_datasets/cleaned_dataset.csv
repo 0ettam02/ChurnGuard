@@ -1,0 +1,6 @@
+customer_id,sesso,età,data_iscrizione,tipo_abbonamento,prezzo_abbonamento,ultima_presenza,media_presenze_sett,giorni_da_ultima_presenza,churn
+,$10.5,25,,,,,,12/05/2023,Male
+,€20,30,,,,,,2023/06/01,Female
+,15.0,22,,,,,,15-07-2023,M
+,€18.5,28,,,,,,2023-04-20,F
+,$12,35,,,,,,2023-03-12,Male

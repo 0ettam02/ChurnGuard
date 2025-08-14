@@ -241,70 +241,49 @@ def info_soldi(input_data: InputDati):
 def utenti_rischio():
     global df_noChurn
     import numpy as np
-    import joblib
     from fastapi import HTTPException
 
     if df_noChurn is None:
         raise HTTPException(status_code=500, detail="Dataset non caricato. Usa prima /modello_dataset")
 
-    filtro_giorni = df_noChurn[df_noChurn["media_presenze_sett"] < 0.5]["customer_id"]
-    lista_filtro_giorni = filtro_giorni.values.tolist()
-    tutti_valori_utenti = []
-    dati = "età,prezzo_abbonamento,media_presenze_sett,giorni_da_ultima_presenza,anno_iscrizione,mese_iscrizione,mese_ultima_presenza,tipo_abbonamento_encoder,sesso_F,sesso_M"
-    lista = dati.split(",")
+    # Filtri da applicare
+    filtri = [
+        ("media_presenze_sett", "<", 0.5),
+        ("giorni_da_ultima_presenza", ">", 20)
+    ]
 
+    notifiche = []
 
-    for i in range(len(lista_filtro_giorni)):
-        valori_utenti = df_noChurn[df_noChurn["customer_id"]==lista_filtro_giorni[i]][lista].values.tolist()
-        #qui metto 0, perchè ad ogni iterazione sovrascrivo quello di prima, quindi salvo nella lista l'unico valore valori_utenti, poi sovrascrivo e cosi via riempiendo la lista
-        tutti_valori_utenti.append(valori_utenti[0])
+    for col, op, val in filtri:
+        if op == "<":
+            clienti = df_noChurn[df_noChurn[col] < val]["customer_id"].tolist()
+        elif op == ">":
+            clienti = df_noChurn[df_noChurn[col] > val]["customer_id"].tolist()
+        else:
+            continue
 
+        if not clienti:
+            continue  # Nessun cliente, salto questo filtro
 
-    modello = model_churn
+        dati_features = ["età","prezzo_abbonamento","media_presenze_sett","giorni_da_ultima_presenza",
+                         "anno_iscrizione","mese_iscrizione","mese_ultima_presenza",
+                         "tipo_abbonamento_encoder","sesso_F","sesso_M"]
 
-    np_valori_utenti = np.array(tutti_valori_utenti)
+        valori_clienti = df_noChurn[df_noChurn["customer_id"].isin(clienti)][dati_features]
 
-    pred = modello.predict(np_valori_utenti)
+        # Predict sul DataFrame direttamente, così mantiene i nomi delle colonne
+        pred = model_churn.predict(valori_clienti)
 
-    notifiche_sett = []
-    for i, prediction in enumerate(pred):
-        if prediction == 1:
-            customer_id = lista_filtro_giorni[i]
-            notifiche_sett.append({
-                "id": i + 1,
-                "customer_id": customer_id,
-                "message": f"Il cliente {customer_id} è a rischio abbandono, SCOPRI IL PERCHÈ"
-            })
-# ----------------------------------------------
-    filtro_giorni = df_noChurn[df_noChurn["giorni_da_ultima_presenza"] > 20]["customer_id"]
-    lista_filtro_giorni = filtro_giorni.values.tolist()
-    tutti_valori_utenti = []
-    dati = "età,prezzo_abbonamento,media_presenze_sett,giorni_da_ultima_presenza,anno_iscrizione,mese_iscrizione,mese_ultima_presenza,tipo_abbonamento_encoder,sesso_F,sesso_M"
-    lista = dati.split(",")
+        for i, p in enumerate(pred):
+            if p == 1:
+                notifiche.append({
+                    "id": len(notifiche) + 1,
+                    "customer_id": clienti[i],
+                    "message": f"Il cliente {clienti[i]} è a rischio abbandono, SCOPRI IL PERCHÈ"
+                })
 
-
-    for i in range(len(lista_filtro_giorni)):
-        valori_utenti = df_noChurn[df_noChurn["customer_id"]==lista_filtro_giorni[i]][lista].values.tolist()
-        #qui metto 0, perchè ad ogni iterazione sovrascrivo quello di prima, quindi salvo nella lista l'unico valore valori_utenti, poi sovrascrivo e cosi via riempiendo la lista
-        tutti_valori_utenti.append(valori_utenti[0])
-
-
-    modello = model_churn
-
-    np_valori_utenti = np.array(tutti_valori_utenti)
-
-    pred = modello.predict(np_valori_utenti)
-    notifiche_giorni = []
-    for i, prediction in enumerate(pred):
-        if prediction == 1:
-            customer_id = lista_filtro_giorni[i]
-            notifiche_giorni.append({
-                "id": i + 1,
-                "customer_id": customer_id,
-                "message": f"Il cliente {customer_id} è a rischio abbandono, SCOPRI IL PERCHÈ"
-            })
-    notifiche = notifiche_giorni + notifiche_sett
     return notifiche
+
 
 # SEZIONE RETENTION----------------------------------------------------------------
 from fastapi import Query, HTTPException
@@ -570,3 +549,4 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 @app.get("/me", response_model=UserOut)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
+

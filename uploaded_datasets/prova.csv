@@ -1,0 +1,11 @@
+customer_id,sesso,età,data_iscrizione,tipo_abbonamento,prezzo_abbonamento,ultima_presenza,media_presenze_sett,giorni_da_ultima_presenza,churn
+CUST0000,M,56,29/07/2023,trimestrale,80,10/05/2025,1.88,43,0
+CUST0001,M,38,06/01/2025,trimestrale,80,16/06/2025,2.19,6,0
+CUST0002,M,36,28/05/2024,trimestrale,80,23/02/2025,0.00,119,1
+CUST0003,M,57,06/08/2023,mensile,30,20/06/2025,2.25,2,0
+CUST0004,M,39,04/11/2024,trimestrale,80,06/06/2025,1.66,16,0
+CUST0005,F,19,08/02/2024,mensile,30,18/05/2025,1.58,35,0
+CUST0006,M,50,06/01/2024,trimestrale,80,12/03/2025,0.00,102,1
+CUST0007,F,44,23/11/2023,mensile,30,13/06/2025,2.98,9,0
+CUST0008,F,45,19/08/2023,mensile,30,07/06/2025,2.37,15,0
+CUST0009,F,61,24/07/2023,annuale,280,03/06/2025,2.42,19,0
