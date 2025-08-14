@@ -6,19 +6,6 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-interface CleanedRow {
-  customer_id: string;
-  sesso: string;
-  età: number;
-  data_iscrizione: string;
-  tipo_abbonamento: string;
-  prezzo_abbonamento: number;
-  ultima_presenza: string;
-  media_presenze_sett: number;
-  giorni_da_ultima_presenza: number;
-  churn: number;
-}
-
 const masterSchema = {
   type: Type.ARRAY,
   items: {
@@ -43,7 +30,7 @@ const masterSchema = {
   },
 };
 
-const getCleaningPrompt = (data: any[]) => `
+const getCleaningPrompt = (data) => `
 You are an AI assistant that transforms messy gym membership datasets into a clean, standardized JSON format.
 
 Master dataset structure (columns and order):
@@ -83,12 +70,7 @@ MESSY INPUT DATA (first 50 rows):
 ${JSON.stringify(data.slice(0, 50))}
 `;
 
-interface MyGenerateContentResponse {
-  text?: string;
-  structured_output?: CleanedRow[];
-}
-
-export async function cleanDataWithGemini(data: any[]): Promise<CleanedRow[]> {
+export async function cleanDataWithGemini(data) {
   if (!data || data.length === 0) return [];
 
   const prompt = getCleaningPrompt(data);
@@ -103,21 +85,19 @@ export async function cleanDataWithGemini(data: any[]): Promise<CleanedRow[]> {
       },
     });
 
-    const resp = response as MyGenerateContentResponse;
-
-    const cleaned: CleanedRow[] = resp.structured_output?.length
-      ? resp.structured_output
+    const cleaned = response.structured_output?.length
+      ? response.structured_output
       : JSON.parse((response?.text ?? "[]").replace(/^```json\s*/i, "").replace(/```$/i, ""));
 
-    const ORDER: (keyof CleanedRow)[] = [
+    const ORDER = [
       "customer_id","sesso","età","data_iscrizione","tipo_abbonamento",
       "prezzo_abbonamento","ultima_presenza","media_presenze_sett",
       "giorni_da_ultima_presenza","churn"
     ];
 
-    const normalized: CleanedRow[] = cleaned.map(row => {
-      const out: Partial<CleanedRow> = {};
-      ORDER.forEach((k) => {
+    const normalized = cleaned.map(row => {
+      const out = {};
+      ORDER.forEach(k => {
         let v = row?.[k];
         if (v === null || v === undefined || v === "") {
           if (["sesso","data_iscrizione","tipo_abbonamento","ultima_presenza"].includes(k)) v = "";
@@ -129,18 +109,15 @@ export async function cleanDataWithGemini(data: any[]): Promise<CleanedRow[]> {
         if (k === "customer_id" && (!v || !/^CUST\d{4,}$/.test(String(v)))) {
           v = `CUST${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`;
         }
-        out[k] = v as CleanedRow[keyof CleanedRow];
+        out[k] = v;
       });
-      return out as CleanedRow;
+      return out;
     });
 
     return normalized;
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error during Gemini API call:", error);
-    if (error instanceof Error && /JSON/i.test(error.message)) {
-      throw new Error("The AI returned an invalid data format.");
-    }
     throw new Error("AI cleaning failed");
   }
 }
